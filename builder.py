@@ -1,8 +1,23 @@
 import os
+import re
 import shutil
 import subprocess
 import sys
 import tempfile
+
+
+def substituir_constante(codigo, nome, valor):
+    codigo, total = re.subn(
+        rf"^{nome}\s*=.*$",
+        f"{nome} = {valor}",
+        codigo,
+        flags=re.MULTILINE
+    )
+
+    if total != 1:
+        raise ValueError(f"Constante {nome} não encontrada no template.")
+
+    return codigo
 
 
 def gerar_faah(audio_path, chance, volume, destino):
@@ -31,14 +46,16 @@ def gerar_faah(audio_path, chance, volume, destino):
 
             codigo = arquivo.read()
 
-        codigo = codigo.replace(
-            "CHANCE = 0.20",
-            f"CHANCE = {chance / 100}"
+        codigo = substituir_constante(
+            codigo,
+            "CHANCE",
+            round(chance / 100, 4)
         )
 
-        codigo = codigo.replace(
-            "VOLUME = 0.05",
-            f"VOLUME = {volume / 100}"
+        codigo = substituir_constante(
+            codigo,
+            "VOLUME",
+            round(volume / 100, 4)
         )
 
         main_path = os.path.join(
